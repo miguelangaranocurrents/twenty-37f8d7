@@ -833,8 +833,11 @@ export class WorkspaceSelectQueryBuilder implements WhereExpressionLike {
       if (nestedSql.length > 0) {
         this.whereClauses.push({
           operator,
+          // A negated group must keep rows where the inner condition is NULL
+          // (e.g. "employees is not 50" keeps companies without employees),
+          // matching the client-side record filter semantics
           sql: isNegatedWhereFactoryLike(condition)
-            ? `NOT (${nestedSql})`
+            ? `((NOT (${nestedSql})) IS NOT FALSE)`
             : `(${nestedSql})`,
         });
       }
